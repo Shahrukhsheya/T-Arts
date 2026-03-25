@@ -2,12 +2,29 @@ import streamlit as st
 import requests
 
 st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
+
+# 🚨 YAHAN APNI TEENO KEYS DALEIN
+SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
+PEXELS_API_KEY = "IuQKyToABsqchwUub0Ij2B2PT5uVb1T4A5ZKHlRXVOGlh5lT0fdwxHMS"
+giphy_api_key = "sgLvVdGwg68DlurSXSAyPzoBQ4V1TGdk"
+pixeby_api_key = "53815545-66e5dc4e7fd837fef7817e906"
+
+# ⚙️ SIDEBAR (Side Menu for Filters)
+with st.sidebar:
+    st.header("⚙️ Search Filters")
+    st.write("Apply filters to refine your results.")
+    
+    bg_filter = st.radio("Background:", ["Any", "Without BG (Transparent)"])
+    file_type = st.radio("Format:", ["Any", "JPG", "PNG"])
+    
+    st.divider()
+    st.info("💡 Tip: 'Without BG' feature uses our deep web engine to find perfect cutouts for your editing workflow.")
+
+# MAIN PAGE UI
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
 
-SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
-
-# 🔍 प्रोफेशनल सर्च बार
+# 🔍 Professional Search Bar
 query = st.text_input("Search", placeholder="🔍 Search for anything (e.g., Tiger, Salman Khan) and press Enter...", label_visibility="collapsed")
 
 # 3 Tabs
@@ -20,62 +37,79 @@ with tab_videos:
     st.info("🚀 Video and B-Rolls search feature is under development and will be available soon!")
 
 with tab_photos:
-    # Filters
-    col_f1, col_f2 = st.columns(2)
-    with col_f1:
-        bg_filter = st.radio("Background:", ["Any", "Without BG (Transparent)"], horizontal=True)
-    with col_f2:
-        file_type = st.radio("Format:", ["Any", "JPG", "PNG"], horizontal=True)
-
     if query:
-        st.info(f"🌐 Searching the web for '{query}'...")
+        images_list = []
         
-        # सर्च को और स्मार्ट बनाना
-        search_query = query
-        if bg_filter == "Without BG (Transparent)":
-            search_query += " transparent background png"
-        if file_type != "Any":
-            search_query += f" {file_type}"
+        # HYBRID LOGIC
+        if bg_filter == "Without BG (Transparent)" or file_type == "PNG":
+            st.info(f"🌐 Searching the Deep Web for '{query}' with transparent background...")
             
-        url = "https://google.serper.dev/images"
-        payload = {
-            "q": search_query,
-            "num": 30  # एक बार में 30 फोटो लाएगा
-        }
-        headers = {
-            'X-API-KEY': SERPER_API_KEY,
-            'Content-Type': 'application/json'
-        }
-
-        try:
-            res = requests.post(url, headers=headers, json=payload).json()
-            
-            if "message" in res and "Unauthorized" in res["message"]:
-                st.error("⚠️ API Key Error: Please check your Serper API Key.")
-            else:
-                images_list = []
+            # Use Only Serper for Transparent/PNGs
+            search_query = query + (" transparent background png" if bg_filter == "Without BG (Transparent)" else " png")
+            url = "https://google.serper.dev/images"
+            payload = {"q": search_query, "num": 40}
+            headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
+            try:
+                res = requests.post(url, headers=headers, json=payload).json()
                 if "images" in res:
                     for item in res["images"]:
                         images_list.append(item["imageUrl"])
+            except:
+                pass
+                
+        else:
+            st.info(f"⚡ Smart Search activated for '{query}'. Fetching from multiple sources to save limits...")
+            
+            # 1. Unsplash (Free)
+            try:
+                un_url = f"https://api.unsplash.com/search/photos?query={query}&client_id={UNSPLASH_API_KEY}&per_page=20&order_by=relevant"
+                un_res = requests.get(un_url).json()
+                if "results" in un_res:
+                    for img in un_res["results"]:
+                        images_list.append(img["urls"]["regular"])
+            except:
+                pass
+                
+            # 2. Pexels (Free)
+            try:
+                px_url = f"https://api.pexels.com/v1/search?query={query}&per_page=20"
+                headers = {"Authorization": PEXELS_API_KEY}
+                px_res = requests.get(px_url, headers=headers).json()
+                if "photos" in px_res:
+                    for img in px_res["photos"]:
+                        images_list.append(img["src"]["large"])
+            except:
+                pass
+                
+            # 3. Serper (Deep Web - Sirf 10-20 photos layega Celebs ke liye)
+            try:
+                url = "https://google.serper.dev/images"
+                payload = {"q": query, "num": 20}
+                headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
+                res = requests.post(url, headers=headers, json=payload).json()
+                if "images" in res:
+                    for item in res["images"]:
+                        images_list.append(item["imageUrl"])
+            except:
+                pass
 
-                if len(images_list) > 0:
-                    st.success("🎉 Awesome! Found perfect matches.")
-                    
-                    c1, c2, c3 = st.columns(3)
-                    for i, img_url in enumerate(images_list):
-                        if i % 3 == 0:
-                            with c1:
-                                st.image(img_url, use_container_width=True)
-                                st.link_button("⬇️ Download HD", img_url, use_container_width=True)
-                        elif i % 3 == 1:
-                            with c2:
-                                st.image(img_url, use_container_width=True)
-                                st.link_button("⬇️ Download HD", img_url, use_container_width=True)
-                        else:
-                            with c3:
-                                st.image(img_url, use_container_width=True)
-                                st.link_button("⬇️ Download HD", img_url, use_container_width=True)
+        # Display Images
+        if len(images_list) > 0:
+            st.success(f"🎉 Awesome! Found {len(images_list)} high-quality images.")
+            
+            c1, c2, c3 = st.columns(3)
+            for i, img_url in enumerate(images_list):
+                if i % 3 == 0:
+                    with c1:
+                        st.image(img_url, use_container_width=True)
+                        st.link_button("⬇️ Download HD", img_url, use_container_width=True)
+                elif i % 3 == 1:
+                    with c2:
+                        st.image(img_url, use_container_width=True)
+                        st.link_button("⬇️ Download HD", img_url, use_container_width=True)
                 else:
-                    st.error("No images found. Try a different keyword.")
-        except Exception as e:
-            st.error("⚠️ Error connecting to Search Server. Please check your connection.")
+                    with c3:
+                        st.image(img_url, use_container_width=True)
+                        st.link_button("⬇️ Download HD", img_url, use_container_width=True)
+        else:
+            st.error("No images found. Please check your API keys or try a different keyword.")
