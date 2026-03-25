@@ -10,7 +10,7 @@ PEXELS_API_KEY = "IuQKyToABsqchwUub0Ij2B2PT5uVb1T4A5ZKHlRXVOGlh5lT0fdwxHMS"
 giphy_api_key = "sgLvVdGwg68DlurSXSAyPzoBQ4V1TGdk"
 pixeby_api_key = "53815545-66e5dc4e7fd837fef7817e906"
 GOOGLE_API_KEY = "AIzaSyBZPdZuS8oHn_4j6JgzbSevV6oG3hT_ZLo"
-SEARCH_ENGINE_ID = "<script async src="https://cse.google.com/cse.js?cx=229bff70d98bd43d7">
+SEARCH_ENGINE_ID = "229bff70d98bd43d7"
 </script>
 <div class="gcse-search"></div>"
 
