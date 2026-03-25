@@ -9,6 +9,10 @@ UNSPLASH_API_KEY = "2KvEQu8W69PeEHtVR8CW4HiPudld_TzzGl0yWQvat9c"
 PEXELS_API_KEY = "IuQKyToABsqchwUub0Ij2B2PT5uVb1T4A5ZKHlRXVOGlh5lT0fdwxHMS"
 giphy_api_key = "sgLvVdGwg68DlurSXSAyPzoBQ4V1TGdk"
 pixeby_api_key = "53815545-66e5dc4e7fd837fef7817e906"
+GOOGLE_API_KEY = "AIzaSyBZPdZuS8oHn_4j6JgzbSevV6oG3hT_ZLo"
+SEARCH_ENGINE_ID = "<script async src="https://cse.google.com/cse.js?cx=229bff70d98bd43d7">
+</script>
+<div class="gcse-search"></div>"
 
 # सर्च बॉक्स (बिना बटन के, Enter दबाते ही काम करेगा)
 query = st.text_input("🔍 What do you want to find? (Press 'Enter' to search)")
@@ -38,9 +42,7 @@ with tab_photos:
         st.info(f"🌐 Searching Google's database for '{query}'...")
         
         # Google API का लिंक तैयार करना
-        url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={AIzaSyBZPdZuS8oHn_4j6JgzbSevV6oG3hT_ZLo}&cx={<script async src="https://cse.google.com/cse.js?cx=229bff70d98bd43d7">
-</script>
-<div class="gcse-search"></div>}&searchType=image&num=10"
+        url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={GOOGLE_API_KEY}&cx={SEARCH_ENGINE_ID}&searchType=image&num=10"
 
         # अगर Without BG सिलेक्ट किया है
         if bg_filter == "Without BG (Transparent)":
