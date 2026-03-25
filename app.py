@@ -90,7 +90,7 @@ with tab_photos:
                     pass
 
             # ==========================================
-            # 🎨 100% BULLETPROOF HTML & CSS (No Spaces, No JS)
+            # 🎨 MINIMALIST HTML & CSS (Single View Button)
             # ==========================================
             if len(images_list) > 0:
                 html_code = "<style>"
@@ -98,15 +98,16 @@ with tab_photos:
                 html_code += ".img-box { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }"
                 html_code += ".img-box img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }"
                 html_code += ".img-box:hover img { transform: scale(1.05); }"
-                html_code += ".overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.3s ease; }"
+                html_code += ".overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }"
                 html_code += ".img-box:hover .overlay { opacity: 1; }"
-                html_code += ".action-btn { background-color: rgba(255, 255, 255, 0.9); color: #000 !important; padding: 10px 18px; border-radius: 25px; text-decoration: none !important; font-weight: bold; font-size: 14px; transition: background-color 0.2s ease, transform 0.2s ease; display: inline-block; }"
+                html_code += ".action-btn { background-color: rgba(255, 255, 255, 0.9); color: #000 !important; padding: 12px 24px; border-radius: 30px; text-decoration: none !important; font-weight: bold; font-size: 15px; transition: background-color 0.2s ease, transform 0.2s ease; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }"
                 html_code += ".action-btn:hover { background-color: #fff; transform: scale(1.05); }"
                 html_code += "</style>"
                 
                 html_code += '<div class="gallery">'
                 for img_url in images_list:
-                    html_code += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View</a><a href="{img_url}" download="T-Arts-Image" target="_blank" class="action-btn">⬇️ Download</a></div></div>'
+                    # Sirf ek 'View' button rakha gaya hai
+                    html_code += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View HD</a></div></div>'
                 html_code += '</div>'
                 
                 st.markdown(html_code, unsafe_allow_html=True)
