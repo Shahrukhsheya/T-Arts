@@ -1,8 +1,7 @@
 import streamlit as st
 import requests
-from duckduckgo_search import DDGS
 
-st.set_page_config(page_title="T-Arts: Pro Image Search", layout="wide")
+st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
 
@@ -11,63 +10,75 @@ PEXELS_API_KEY = "IuQKyToABsqchwUub0Ij2B2PT5uVb1T4A5ZKHlRXVOGlh5lT0fdwxHMS"
 giphy_api_key = "sgLvVdGwg68DlurSXSAyPzoBQ4V1TGdk"
 pixeby_api_key = "53815545-66e5dc4e7fd837fef7817e906"
 
+# सर्च बॉक्स (बिना बटन के, Enter दबाते ही काम करेगा)
+query = st.text_input("🔍 What do you want to find? (Press 'Enter' to search)")
 
-query = st.text_input("What do you want to find? (e.g., Salman Khan, Avengers, Cyberpunk)")
+# 3 Tabs का डिज़ाइन
+tab_photos, tab_gifs, tab_videos = st.tabs(["📷 Photos", "🎞️ GIF (Coming Soon)", "🎥 Videos (Coming Soon)"])
 
-if st.button("Search 100+ Images"):
+# GIF Tab
+with tab_gifs:
+    st.info("🚀 GIF search feature is under development and will be available soon!")
+
+# Video Tab
+with tab_videos:
+    st.info("🚀 Video and B-Rolls search feature is under development and will be available soon!")
+
+# Photos Tab (Main Working Area)
+with tab_photos:
+    # Filters का डिज़ाइन
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        bg_filter = st.radio("Background:", ["Any", "Without BG (Transparent)"], horizontal=True)
+    with col_f2:
+        file_type = st.radio("Format:", ["Any", "JPG", "PNG"], horizontal=True)
+
+    # अगर सर्च बॉक्स में कुछ लिखा गया है और Enter दबाया गया है
     if query:
-        st.info("🌐 Searching across the web and stock libraries. This may take 5-10 seconds...")
-        images_list = []
+        st.info(f"🌐 Searching Google's database for '{query}'...")
         
-        # 1. DuckDuckGo for Internet/Celeb images
+        # Google API का लिंक तैयार करना
+        url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={AIzaSyBZPdZuS8oHn_4j6JgzbSevV6oG3hT_ZLo}&cx={<script async src="https://cse.google.com/cse.js?cx=229bff70d98bd43d7">
+</script>
+<div class="gcse-search"></div>}&searchType=image&num=10"
+
+        # अगर Without BG सिलेक्ट किया है
+        if bg_filter == "Without BG (Transparent)":
+            url += "&imgType=transparent"
+        
+        # अगर Format सिलेक्ट किया है
+        if file_type == "JPG":
+            url += "&fileType=jpg"
+        elif file_type == "PNG":
+            url += "&fileType=png"
+
         try:
-            with DDGS() as ddgs:
-                ddg_results = list(ddgs.images(query, max_results=60))
-                for res in ddg_results:
-                    images_list.append(res['image'])
+            res = requests.get(url).json()
+            images_list = []
+            
+            if "items" in res:
+                for item in res["items"]:
+                    images_list.append(item["link"])
+
+            # स्क्रीन पर फोटो दिखाना
+            if len(images_list) > 0:
+                st.success("🎉 Awesome! Found perfect matches.")
+                
+                c1, c2, c3 = st.columns(3)
+                for i, img_url in enumerate(images_list):
+                    if i % 3 == 0:
+                        with c1:
+                            st.image(img_url, use_container_width=True)
+                            st.link_button("⬇️ Download", img_url, use_container_width=True)
+                    elif i % 3 == 1:
+                        with c2:
+                            st.image(img_url, use_container_width=True)
+                            st.link_button("⬇️ Download", img_url, use_container_width=True)
+                    else:
+                        with c3:
+                            st.image(img_url, use_container_width=True)
+                            st.link_button("⬇️ Download", img_url, use_container_width=True)
+            else:
+                st.error("No images found. Try a different keyword.")
         except Exception as e:
-            st.warning("⚠️ High traffic on web search. Displaying stock photos only. Please try again in 10-15 minutes.")
-
-        # 2. Unsplash images
-        un_url = f"https://api.unsplash.com/search/photos?query={query}&client_id={UNSPLASH_API_KEY}&per_page=30&order_by=relevant"
-        try:
-            un_res = requests.get(un_url).json()
-            if "results" in un_res:
-                for img in un_res["results"]:
-                    images_list.append(img["urls"]["regular"])
-        except:
-            pass 
-
-        # 3. Pexels images
-        px_url = f"https://api.pexels.com/v1/search?query={query}&per_page=30"
-        headers = {"Authorization": PEXELS_API_KEY}
-        try:
-            px_res = requests.get(px_url, headers=headers).json()
-            if "photos" in px_res:
-                for img in px_res["photos"]:
-                    images_list.append(img["src"]["large"])
-        except:
-            pass
-            
-        # 4. Display Images on Screen
-        if len(images_list) > 0:
-            st.success(f"🎉 Awesome! Found {len(images_list)} high-quality images. Keep scrolling 👇")
-            
-            col1, col2, col3 = st.columns(3)
-            for i, img_url in enumerate(images_list):
-                if i % 3 == 0:
-                    with col1:
-                        st.image(img_url, use_container_width=True)
-                        st.link_button("⬇️ Download HD", img_url, use_container_width=True)
-                elif i % 3 == 1:
-                    with col2:
-                        st.image(img_url, use_container_width=True)
-                        st.link_button("⬇️ Download HD", img_url, use_container_width=True)
-                else:
-                    with col3:
-                        st.image(img_url, use_container_width=True)
-                        st.link_button("⬇️ Download HD", img_url, use_container_width=True)
-        else:
-            st.error("No images found. Please try a different keyword!")
-    else:
-        st.warning("Please enter a keyword in the search box first!")
+            st.error("⚠️ Error connecting to Google API. Please check your API Keys.")
