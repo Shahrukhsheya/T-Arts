@@ -5,9 +5,6 @@ st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 
 # 🚨 YAHAN APNI TEENO KEYS DALEIN
 SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
-PEXELS_API_KEY = "IuQKyToABsqchwUub0Ij2B2PT5uVb1T4A5ZKHlRXVOGlh5lT0fdwxHMS"
-giphy_api_key = "sgLvVdGwg68DlurSXSAyPzoBQ4V1TGdk"
-pixeby_api_key = "53815545-66e5dc4e7fd837fef7817e906"
 
 # ⚙️ SIDEBAR (Side Menu for Filters)
 with st.sidebar:
