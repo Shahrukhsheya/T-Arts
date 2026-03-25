@@ -4,9 +4,6 @@ import requests
 st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 
 SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
-PEXELS_API_KEY = "IuQKyToABsqchwUub0Ij2B2PT5uVb1T4A5ZKHlRXVOGlh5lT0fdwxHMS"
-giphy_api_key = "sgLvVdGwg68DlurSXSAyPzoBQ4V1TGdk"
-pixeby_api_key = "53815545-66e5dc4e7fd837fef7817e906"
 
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
@@ -93,25 +90,55 @@ with tab_photos:
                     pass
 
             # ==========================================
-            # 🎨 CUSTOM HTML & CSS FOR HOVER GALLERY (FIXED)
+            # 🎨 CUSTOM HTML & CSS (JAVASCRIPT FORCE DOWNLOAD ADDED)
             # ==========================================
             if len(images_list) > 0:
-                custom_html = "<style>\n"
-                custom_html += ".gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 10px 0; }\n"
-                custom_html += ".img-box { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }\n"
-                custom_html += ".img-box img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }\n"
-                custom_html += ".img-box:hover img { transform: scale(1.05); }\n"
-                custom_html += ".overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.3s ease; }\n"
-                custom_html += ".img-box:hover .overlay { opacity: 1; }\n"
-                custom_html += ".action-btn { background-color: rgba(255, 255, 255, 0.9); color: #000 !important; padding: 10px 18px; border-radius: 25px; text-decoration: none !important; font-weight: bold; font-size: 14px; transition: background-color 0.2s ease, transform 0.2s ease; }\n"
-                custom_html += ".action-btn:hover { background-color: #fff; transform: scale(1.05); }\n"
-                custom_html += "</style>\n"
+                custom_html = """
+                <style>
+                .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 10px 0; }
+                .img-box { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+                .img-box img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+                .img-box:hover img { transform: scale(1.05); }
+                .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.3s ease; }
+                .img-box:hover .overlay { opacity: 1; }
+                .action-btn { background-color: rgba(255, 255, 255, 0.9); color: #000 !important; padding: 10px 18px; border-radius: 25px; text-decoration: none !important; font-weight: bold; font-size: 14px; transition: background-color 0.2s ease, transform 0.2s ease; cursor: pointer; border: none; }
+                .action-btn:hover { background-color: #fff; transform: scale(1.05); }
+                </style>
                 
-                custom_html += '<div class="gallery">\n'
+                <script>
+                // Ye script direct download trigger karti hai
+                function forceDownload(btn, url) {
+                    let originalText = btn.innerText;
+                    btn.innerText = "⏳ Wait...";
+                    
+                    fetch(url)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const blobUrl = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = blobUrl;
+                            a.download = 'T-Arts-Image.jpg';
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(blobUrl);
+                            btn.innerText = "✅ Done";
+                            setTimeout(() => { btn.innerText = originalText; }, 2000);
+                        })
+                        .catch(() => {
+                            // Agar server block kare, to new tab me open kar dega
+                            btn.innerText = originalText;
+                            window.open(url, '_blank');
+                        });
+                }
+                </script>
+                
+                <div class="gallery">
+                """
                 
                 for img_url in images_list:
-                    # Yaha par bina space diye ek seedhi line me HTML likha gaya hai
-                    custom_html += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View</a><a href="{img_url}" download="T-Arts-Image" target="_blank" class="action-btn">⬇️ Download</a></div></div>\n'
+                    # 'View' naye tab me khulega aur 'Download' direct forceDownload JS function chalayega
+                    custom_html += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View</a><button onclick="forceDownload(this, \'{img_url}\')" class="action-btn">⬇️ Download</button></div></div>\n'
                 
                 custom_html += '</div>'
                 
