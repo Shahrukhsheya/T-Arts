@@ -90,28 +90,25 @@ with tab_photos:
                     pass
 
             # ==========================================
-            # 🎨 STABLE HTML & CSS (No JavaScript)
+            # 🎨 100% BULLETPROOF HTML & CSS (No Spaces, No JS)
             # ==========================================
             if len(images_list) > 0:
-                custom_html = """
-                <style>
-                .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 10px 0; }
-                .img-box { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-                .img-box img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
-                .img-box:hover img { transform: scale(1.05); }
-                .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.3s ease; }
-                .img-box:hover .overlay { opacity: 1; }
-                .action-btn { background-color: rgba(255, 255, 255, 0.9); color: #000 !important; padding: 10px 18px; border-radius: 25px; text-decoration: none !important; font-weight: bold; font-size: 14px; transition: background-color 0.2s ease, transform 0.2s ease; display: inline-block; }
-                .action-btn:hover { background-color: #fff; transform: scale(1.05); }
-                </style>
-                <div class="gallery">
-                """
+                html_code = "<style>"
+                html_code += ".gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 10px 0; }"
+                html_code += ".img-box { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }"
+                html_code += ".img-box img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }"
+                html_code += ".img-box:hover img { transform: scale(1.05); }"
+                html_code += ".overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.3s ease; }"
+                html_code += ".img-box:hover .overlay { opacity: 1; }"
+                html_code += ".action-btn { background-color: rgba(255, 255, 255, 0.9); color: #000 !important; padding: 10px 18px; border-radius: 25px; text-decoration: none !important; font-weight: bold; font-size: 14px; transition: background-color 0.2s ease, transform 0.2s ease; display: inline-block; }"
+                html_code += ".action-btn:hover { background-color: #fff; transform: scale(1.05); }"
+                html_code += "</style>"
                 
+                html_code += '<div class="gallery">'
                 for img_url in images_list:
-                    custom_html += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View</a><a href="{img_url}" download="T-Arts-Image" target="_blank" class="action-btn">⬇️ Download</a></div></div>\n'
+                    html_code += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View</a><a href="{img_url}" download="T-Arts-Image" target="_blank" class="action-btn">⬇️ Download</a></div></div>'
+                html_code += '</div>'
                 
-                custom_html += '</div>'
-                
-                st.markdown(custom_html, unsafe_allow_html=True)
+                st.markdown(html_code, unsafe_allow_html=True)
             else:
                 st.error("No images found. Please check your API keys or try a different keyword.")
