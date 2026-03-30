@@ -3,10 +3,58 @@ import requests
 
 st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 
+
 SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
+REMOVE_BG_API_KEY = "2QAzGDiucvPZaGB1J37Q4wiP"
 
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
+
+# ==========================================
+# ✂️ THE NEW AI CUTOUT STUDIO
+# ==========================================
+with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expanded=True):
+    st.write("Right-click any image below, select **'Copy image address'**, paste it here, and let AI do the magic!")
+    
+    col_input, col_ai_btn = st.columns([10, 2])
+    with col_input:
+        ai_img_url = st.text_input("Paste Image Link:", placeholder="Paste image URL here...", label_visibility="collapsed")
+    with col_ai_btn:
+        process_btn = st.button("✂️ Remove BG")
+
+    if process_btn and ai_img_url:
+        with st.spinner("🤖 AI is cutting out the background... Please wait!"):
+            try:
+                # Remove.bg API Call
+                response = requests.post(
+                    'https://api.remove.bg/v1.0/removebg',
+                    data={'image_url': ai_img_url, 'size': 'auto'},
+                    headers={'X-Api-Key': REMOVE_BG_API_KEY},
+                )
+                if response.status_code == requests.codes.ok:
+                    st.success("🎉 Background removed successfully!")
+                    col_result1, col_result2 = st.columns(2)
+                    with col_result1:
+                        st.write("**Before (Original)**")
+                        st.image(ai_img_url, use_container_width=True)
+                    with col_result2:
+                        st.write("**After (Transparent PNG)**")
+                        st.image(response.content, use_container_width=True)
+                        
+                        # Direct Native Download Button
+                        st.download_button(
+                            label="⬇️ Download True PNG",
+                            data=response.content,
+                            file_name="T-Arts-Transparent.png",
+                            mime="image/png",
+                            use_container_width=True
+                        )
+                else:
+                    st.error(f"⚠️ AI Error: {response.text}")
+            except Exception as e:
+                st.error("⚠️ Failed to connect to AI Server.")
+
+st.divider()
 
 # 🔍 Search Bar with Icon (Button)
 col_search, col_btn = st.columns([15, 1])
@@ -106,7 +154,6 @@ with tab_photos:
                 
                 html_code += '<div class="gallery">'
                 for img_url in images_list:
-                    # Sirf ek 'View' button rakha gaya hai
                     html_code += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View HD</a></div></div>'
                 html_code += '</div>'
                 
