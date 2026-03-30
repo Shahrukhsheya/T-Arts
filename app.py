@@ -1,21 +1,20 @@
 import streamlit as st
 import requests
-from rembg import remove
-from PIL import Image
-import io
 
 st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 
-SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
+# 🚨 YAHAN APNI 4 KEYS DALEIN
+SERPER_API_KEY = ""8f6269e9c40729b56c89f24a1a232ad789049101"
+HUGGINGFACE_API_KEY = "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"
 
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
 
 # ==========================================
-# ✂️ UNLIMITED AI CUTOUT STUDIO (100% FREE)
+# ✂️ THE AI CUTOUT STUDIO (Hugging Face Cloud - FREE & HIGH LIMIT)
 # ==========================================
 with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expanded=True):
-    st.write("Right-click any image below, select **'Copy image address'**, paste it here, and let our Unlimited AI do the magic!")
+    st.write("Right-click any image below, select **'Copy image address'**, paste it here, and let Cloud AI do the magic!")
     
     col_input, col_ai_btn = st.columns([10, 2])
     with col_input:
@@ -24,43 +23,47 @@ with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expan
         process_btn = st.button("✂️ Remove BG")
 
     if process_btn and ai_img_url:
-        with st.spinner("🤖 Advanced AI is cutting out the background... Please wait!"):
+        with st.spinner("🤖 Cloud AI is processing your image... Please wait!"):
             try:
-                # 1. URL से फोटो डाउनलोड करना
+                # 1. Pehle image ko link se download karna
                 img_response = requests.get(ai_img_url)
                 if img_response.status_code == 200:
-                    input_image = img_response.content
+                    image_bytes = img_response.content
                     
-                    # 2. Unlimited AI से बैकग्राउंड हटाना
-                    output_image = remove(input_image)
+                    # 2. Hugging Face API Call (Briaai RMBG-1.4 Model)
+                    API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
+                    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
                     
-                    st.success("🎉 Background removed successfully! (Unlimited AI Powered)")
+                    hf_response = requests.post(API_URL, headers=headers, data=image_bytes)
                     
-                    # 3. रिजल्ट दिखाना
-                    col_result1, col_result2 = st.columns(2)
-                    with col_result1:
-                        st.write("**Before (Original)**")
-                        st.image(input_image, use_container_width=True)
-                    with col_result2:
-                        st.write("**After (Transparent PNG)**")
-                        st.image(output_image, use_container_width=True)
-                        
-                        # Direct Download
-                        st.download_button(
-                            label="⬇️ Download True PNG",
-                            data=output_image,
-                            file_name="T-Arts-Transparent.png",
-                            mime="image/png",
-                            use_container_width=True
-                        )
+                    if hf_response.status_code == 200:
+                        st.success("🎉 Background removed successfully! (Powered by Hugging Face)")
+                        col_result1, col_result2 = st.columns(2)
+                        with col_result1:
+                            st.write("**Before (Original)**")
+                            st.image(image_bytes, use_container_width=True)
+                        with col_result2:
+                            st.write("**After (Transparent PNG)**")
+                            st.image(hf_response.content, use_container_width=True)
+                            
+                            # Direct Native Download Button
+                            st.download_button(
+                                label="⬇️ Download True PNG",
+                                data=hf_response.content,
+                                file_name="T-Arts-Transparent.png",
+                                mime="image/png",
+                                use_container_width=True
+                            )
+                    else:
+                        st.error("⚠️ AI Server is busy starting up. Please click 'Remove BG' again in 10 seconds.")
                 else:
-                    st.error("⚠️ Failed to load the image. Try a different URL.")
+                    st.error("⚠️ Could not load the original image link.")
             except Exception as e:
-                st.error("⚠️ Error processing the image. Please try another one.")
+                st.error("⚠️ Failed to connect to AI Server.")
 
 st.divider()
 
-# 🔍 Search Bar with Icon (Button)
+# 🔍 Search Bar with Icon
 col_search, col_btn = st.columns([15, 1])
 with col_search:
     query = st.text_input("Search", placeholder="Search for anything and press Enter...", label_visibility="collapsed")
@@ -136,6 +139,9 @@ with tab_photos:
                 except:
                     pass
 
+            # ==========================================
+            # 🎨 UI
+            # ==========================================
             if len(images_list) > 0:
                 html_code = "<style>"
                 html_code += ".gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 10px 0; }"
