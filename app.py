@@ -1,20 +1,21 @@
 import streamlit as st
 import requests
+from rembg import remove
+from PIL import Image
+import io
 
 st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 
-
 SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
-REMOVE_BG_API_KEY = "2QAzGDiucvPZaGB1J37Q4wiP"
 
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
 
 # ==========================================
-# ✂️ THE NEW AI CUTOUT STUDIO
+# ✂️ UNLIMITED AI CUTOUT STUDIO (100% FREE)
 # ==========================================
 with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expanded=True):
-    st.write("Right-click any image below, select **'Copy image address'**, paste it here, and let AI do the magic!")
+    st.write("Right-click any image below, select **'Copy image address'**, paste it here, and let our Unlimited AI do the magic!")
     
     col_input, col_ai_btn = st.columns([10, 2])
     with col_input:
@@ -23,36 +24,39 @@ with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expan
         process_btn = st.button("✂️ Remove BG")
 
     if process_btn and ai_img_url:
-        with st.spinner("🤖 AI is cutting out the background... Please wait!"):
+        with st.spinner("🤖 Advanced AI is cutting out the background... Please wait!"):
             try:
-                # Remove.bg API Call
-                response = requests.post(
-                    'https://api.remove.bg/v1.0/removebg',
-                    data={'image_url': ai_img_url, 'size': 'auto'},
-                    headers={'X-Api-Key': REMOVE_BG_API_KEY},
-                )
-                if response.status_code == requests.codes.ok:
-                    st.success("🎉 Background removed successfully!")
+                # 1. URL से फोटो डाउनलोड करना
+                img_response = requests.get(ai_img_url)
+                if img_response.status_code == 200:
+                    input_image = img_response.content
+                    
+                    # 2. Unlimited AI से बैकग्राउंड हटाना
+                    output_image = remove(input_image)
+                    
+                    st.success("🎉 Background removed successfully! (Unlimited AI Powered)")
+                    
+                    # 3. रिजल्ट दिखाना
                     col_result1, col_result2 = st.columns(2)
                     with col_result1:
                         st.write("**Before (Original)**")
-                        st.image(ai_img_url, use_container_width=True)
+                        st.image(input_image, use_container_width=True)
                     with col_result2:
                         st.write("**After (Transparent PNG)**")
-                        st.image(response.content, use_container_width=True)
+                        st.image(output_image, use_container_width=True)
                         
-                        # Direct Native Download Button
+                        # Direct Download
                         st.download_button(
                             label="⬇️ Download True PNG",
-                            data=response.content,
+                            data=output_image,
                             file_name="T-Arts-Transparent.png",
                             mime="image/png",
                             use_container_width=True
                         )
                 else:
-                    st.error(f"⚠️ AI Error: {response.text}")
+                    st.error("⚠️ Failed to load the image. Try a different URL.")
             except Exception as e:
-                st.error("⚠️ Failed to connect to AI Server.")
+                st.error("⚠️ Error processing the image. Please try another one.")
 
 st.divider()
 
@@ -73,14 +77,12 @@ with tab_videos:
     st.write("🚀 Video and B-Rolls search feature is under development and will be available soon!")
 
 with tab_photos:
-    # Compact Filter System
     format_filter = st.selectbox(
         "Image Format & Filters:", 
         ["Any", "JPG", "JPEG", "PNG", "Transparent (Without BG)"], 
         index=0
     )
 
-    # Search Logic
     if query or search_btn:
         if query:
             images_list = []
@@ -99,7 +101,6 @@ with tab_photos:
                 except:
                     pass
             else:
-                # 1. Unsplash (Max 30)
                 try:
                     un_url = f"https://api.unsplash.com/search/photos?query={query}&client_id={UNSPLASH_API_KEY}&per_page=30&order_by=relevant"
                     un_res = requests.get(un_url).json()
@@ -109,7 +110,6 @@ with tab_photos:
                 except:
                     pass
                     
-                # 2. Pexels (Max 80)
                 try:
                     px_url = f"https://api.pexels.com/v1/search?query={query}&per_page=80"
                     headers = {"Authorization": PEXELS_API_KEY}
@@ -120,7 +120,6 @@ with tab_photos:
                 except:
                     pass
                     
-                # 3. Serper Deep Web (Max 100)
                 if format_filter != "Any":
                     search_query = f"{query} {format_filter}"
                 else:
@@ -137,9 +136,6 @@ with tab_photos:
                 except:
                     pass
 
-            # ==========================================
-            # 🎨 MINIMALIST HTML & CSS (Single View Button)
-            # ==========================================
             if len(images_list) > 0:
                 html_code = "<style>"
                 html_code += ".gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 10px 0; }"
