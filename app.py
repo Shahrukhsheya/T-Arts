@@ -3,7 +3,7 @@ import requests
 
 st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 
-SERPER_API_KEY = ""8f6269e9c40729b56c89f24a1a232ad789049101"
+SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
 HUGGINGFACE_API_KEY = "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"
 
 st.title("🎨 T-Arts: Ultimate Image Search")
