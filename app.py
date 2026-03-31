@@ -3,15 +3,14 @@ import requests
 
 st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 
-# 🚨 YAHAN APNI 4 KEYS DALEIN
-SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
+SERPER_API_KEY = ""8f6269e9c40729b56c89f24a1a232ad789049101"
 HUGGINGFACE_API_KEY = "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"
 
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
 
 # ==========================================
-# ✂️ THE AI CUTOUT STUDIO (Hugging Face Cloud - FREE & HIGH LIMIT)
+# ✂️ THE AI CUTOUT STUDIO (With Anti-Bot Bypass)
 # ==========================================
 with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expanded=True):
     st.write("Right-click any image below, select **'Copy image address'**, paste it here, and let Cloud AI do the magic!")
@@ -25,16 +24,21 @@ with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expan
     if process_btn and ai_img_url:
         with st.spinner("🤖 Cloud AI is processing your image... Please wait!"):
             try:
-                # 1. Pehle image ko link se download karna
-                img_response = requests.get(ai_img_url)
+                # 1. Anti-Bot Bypass Headers (Website ko lagega ye Chrome Browser hai)
+                bot_headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                
+                img_response = requests.get(ai_img_url, headers=bot_headers)
+                
                 if img_response.status_code == 200:
                     image_bytes = img_response.content
                     
-                    # 2. Hugging Face API Call (Briaai RMBG-1.4 Model)
+                    # 2. Hugging Face API Call
                     API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
-                    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+                    hf_headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
                     
-                    hf_response = requests.post(API_URL, headers=headers, data=image_bytes)
+                    hf_response = requests.post(API_URL, headers=hf_headers, data=image_bytes)
                     
                     if hf_response.status_code == 200:
                         st.success("🎉 Background removed successfully! (Powered by Hugging Face)")
@@ -46,7 +50,6 @@ with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expan
                             st.write("**After (Transparent PNG)**")
                             st.image(hf_response.content, use_container_width=True)
                             
-                            # Direct Native Download Button
                             st.download_button(
                                 label="⬇️ Download True PNG",
                                 data=hf_response.content,
@@ -55,11 +58,13 @@ with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expan
                                 use_container_width=True
                             )
                     else:
-                        st.error("⚠️ AI Server is busy starting up. Please click 'Remove BG' again in 10 seconds.")
+                        # Ab AI chhipayega nahi, seedha error batayega!
+                        st.error(f"⚠️ AI Model Error ({hf_response.status_code}): {hf_response.text}")
                 else:
-                    st.error("⚠️ Could not load the original image link.")
+                    st.error(f"⚠️ Website blocked the image download. Error Code: {img_response.status_code}. Try a different image link.")
             except Exception as e:
-                st.error("⚠️ Failed to connect to AI Server.")
+                # Agar code crash hua to exact wajah batayega
+                st.error(f"⚠️ System Error: {str(e)}")
 
 st.divider()
 
