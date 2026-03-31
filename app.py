@@ -6,67 +6,19 @@ st.set_page_config(page_title="T-Arts: Ultimate Image Search", layout="wide")
 SERPER_API_KEY = "8f6269e9c40729b56c89f24a1a232ad789049101"
 HUGGINGFACE_API_KEY = "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"
 
+# ==========================================
+# 🧠 SMART MEMORY (Session State)
+# ==========================================
+# Yeh app ko yaad rakhne me madad karega ki kya search kiya tha, taaki baar-baar API limit kharch na ho.
+if "images_list" not in st.session_state:
+    st.session_state.images_list = []
+if "last_query" not in st.session_state:
+    st.session_state.last_query = ""
+if "ai_target_url" not in st.session_state:
+    st.session_state.ai_target_url = None
+
 st.title("🎨 T-Arts: Ultimate Image Search")
 st.write("Web, Movies, Celebrities, and Stock Images—all in one place!")
-
-# ==========================================
-# ✂️ THE AI CUTOUT STUDIO (With Anti-Bot Bypass)
-# ==========================================
-with st.expander("✨ AI Auto-Cutout Studio (Make Any Image Transparent)", expanded=True):
-    st.write("Right-click any image below, select **'Copy image address'**, paste it here, and let Cloud AI do the magic!")
-    
-    col_input, col_ai_btn = st.columns([10, 2])
-    with col_input:
-        ai_img_url = st.text_input("Paste Image Link:", placeholder="Paste image URL here...", label_visibility="collapsed")
-    with col_ai_btn:
-        process_btn = st.button("✂️ Remove BG")
-
-    if process_btn and ai_img_url:
-        with st.spinner("🤖 Cloud AI is processing your image... Please wait!"):
-            try:
-                # 1. Anti-Bot Bypass Headers (Website ko lagega ye Chrome Browser hai)
-                bot_headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-                
-                img_response = requests.get(ai_img_url, headers=bot_headers)
-                
-                if img_response.status_code == 200:
-                    image_bytes = img_response.content
-                    
-                    # 2. Hugging Face API Call
-                    API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
-                    hf_headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-                    
-                    hf_response = requests.post(API_URL, headers=hf_headers, data=image_bytes)
-                    
-                    if hf_response.status_code == 200:
-                        st.success("🎉 Background removed successfully! (Powered by Hugging Face)")
-                        col_result1, col_result2 = st.columns(2)
-                        with col_result1:
-                            st.write("**Before (Original)**")
-                            st.image(image_bytes, use_container_width=True)
-                        with col_result2:
-                            st.write("**After (Transparent PNG)**")
-                            st.image(hf_response.content, use_container_width=True)
-                            
-                            st.download_button(
-                                label="⬇️ Download True PNG",
-                                data=hf_response.content,
-                                file_name="T-Arts-Transparent.png",
-                                mime="image/png",
-                                use_container_width=True
-                            )
-                    else:
-                        # Ab AI chhipayega nahi, seedha error batayega!
-                        st.error(f"⚠️ AI Model Error ({hf_response.status_code}): {hf_response.text}")
-                else:
-                    st.error(f"⚠️ Website blocked the image download. Error Code: {img_response.status_code}. Try a different image link.")
-            except Exception as e:
-                # Agar code crash hua to exact wajah batayega
-                st.error(f"⚠️ System Error: {str(e)}")
-
-st.divider()
 
 # 🔍 Search Bar with Icon
 col_search, col_btn = st.columns([15, 1])
@@ -75,95 +27,132 @@ with col_search:
 with col_btn:
     search_btn = st.button("🔍")
 
-# 3 Tabs
-tab_photos, tab_gifs, tab_videos = st.tabs(["📷 Photos", "🎞️ GIF (Coming Soon)", "🎥 Videos (Coming Soon)"])
+format_filter = st.selectbox(
+    "Image Format & Filters:", 
+    ["Any", "JPG", "JPEG", "PNG", "Transparent (Without BG)"], 
+    index=0
+)
 
-with tab_gifs:
-    st.write("🚀 GIF search feature is under development and will be available soon!")
-
-with tab_videos:
-    st.write("🚀 Video and B-Rolls search feature is under development and will be available soon!")
-
-with tab_photos:
-    format_filter = st.selectbox(
-        "Image Format & Filters:", 
-        ["Any", "JPG", "JPEG", "PNG", "Transparent (Without BG)"], 
-        index=0
-    )
-
-    if query or search_btn:
-        if query:
-            images_list = []
+# ==========================================
+# 🔍 SEARCH LOGIC (Only runs when you search something new)
+# ==========================================
+if query and (query != st.session_state.last_query or search_btn):
+    st.session_state.last_query = query
+    st.session_state.ai_target_url = None # Naya search karne par purana AI result hata dega
+    images_list = []
+    
+    # HYBRID LOGIC
+    if format_filter in ["Transparent (Without BG)", "PNG"]:
+        search_query = query + " transparent background png" if format_filter == "Transparent (Without BG)" else query + " png"
+        url = "https://google.serper.dev/images"
+        payload = {"q": search_query, "num": 100}
+        headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
+        try:
+            res = requests.post(url, headers=headers, json=payload).json()
+            if "images" in res:
+                for item in res["images"]:
+                    images_list.append(item["imageUrl"])
+        except: pass
+    else:
+        try:
+            un_url = f"https://api.unsplash.com/search/photos?query={query}&client_id={UNSPLASH_API_KEY}&per_page=30&order_by=relevant"
+            un_res = requests.get(un_url).json()
+            if "results" in un_res:
+                for img in un_res["results"]:
+                    images_list.append(img["urls"]["regular"])
+        except: pass
             
-            # HYBRID LOGIC
-            if format_filter in ["Transparent (Without BG)", "PNG"]:
-                search_query = query + " transparent background png" if format_filter == "Transparent (Without BG)" else query + " png"
-                url = "https://google.serper.dev/images"
-                payload = {"q": search_query, "num": 100}
-                headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
-                try:
-                    res = requests.post(url, headers=headers, json=payload).json()
-                    if "images" in res:
-                        for item in res["images"]:
-                            images_list.append(item["imageUrl"])
-                except:
-                    pass
-            else:
-                try:
-                    un_url = f"https://api.unsplash.com/search/photos?query={query}&client_id={UNSPLASH_API_KEY}&per_page=30&order_by=relevant"
-                    un_res = requests.get(un_url).json()
-                    if "results" in un_res:
-                        for img in un_res["results"]:
-                            images_list.append(img["urls"]["regular"])
-                except:
-                    pass
-                    
-                try:
-                    px_url = f"https://api.pexels.com/v1/search?query={query}&per_page=80"
-                    headers = {"Authorization": PEXELS_API_KEY}
-                    px_res = requests.get(px_url, headers=headers).json()
-                    if "photos" in px_res:
-                        for img in px_res["photos"]:
-                            images_list.append(img["src"]["large"])
-                except:
-                    pass
-                    
-                if format_filter != "Any":
-                    search_query = f"{query} {format_filter}"
+        try:
+            px_url = f"https://api.pexels.com/v1/search?query={query}&per_page=80"
+            headers = {"Authorization": PEXELS_API_KEY}
+            px_res = requests.get(px_url, headers=headers).json()
+            if "photos" in px_res:
+                for img in px_res["photos"]:
+                    images_list.append(img["src"]["large"])
+        except: pass
+            
+        if format_filter != "Any":
+            search_query = f"{query} {format_filter}"
+        else:
+            search_query = query
+
+        try:
+            url = "https://google.serper.dev/images"
+            payload = {"q": search_query, "num": 100}
+            headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
+            res = requests.post(url, headers=headers, json=payload).json()
+            if "images" in res:
+                for item in res["images"]:
+                    images_list.append(item["imageUrl"])
+        except: pass
+    
+    st.session_state.images_list = images_list
+
+# ==========================================
+# ✨ AI RESULT STUDIO (Shows UP here when you click 'Get PNG' on any image)
+# ==========================================
+if st.session_state.ai_target_url:
+    st.divider()
+    st.subheader("✂️ AI Cutout Result")
+    with st.spinner("🤖 Cloud AI is extracting the subject... Please wait!"):
+        try:
+            # Safe Image Downloader (Anti-Crash)
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            img_response = requests.get(st.session_state.ai_target_url, headers=headers, timeout=15)
+            
+            if img_response.status_code == 200:
+                # Hugging Face API Call
+                API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
+                hf_headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+                hf_response = requests.post(API_URL, headers=hf_headers, data=img_response.content)
+                
+                if hf_response.status_code == 200:
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    with col1:
+                        st.write("**Before**")
+                        st.image(img_response.content, use_container_width=True)
+                    with col2:
+                        st.write("**After (True PNG)**")
+                        st.image(hf_response.content, use_container_width=True)
+                    with col3:
+                        st.write("**Actions**")
+                        st.download_button("⬇️ Download High-Res PNG", data=hf_response.content, file_name="T-Arts-Cutout.png", mime="image/png", use_container_width=True)
+                        if st.button("❌ Close AI Window", use_container_width=True):
+                            st.session_state.ai_target_url = None
+                            st.rerun()
                 else:
-                    search_query = query
-
-                try:
-                    url = "https://google.serper.dev/images"
-                    payload = {"q": search_query, "num": 100}
-                    headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
-                    res = requests.post(url, headers=headers, json=payload).json()
-                    if "images" in res:
-                        for item in res["images"]:
-                            images_list.append(item["imageUrl"])
-                except:
-                    pass
-
-            # ==========================================
-            # 🎨 UI
-            # ==========================================
-            if len(images_list) > 0:
-                html_code = "<style>"
-                html_code += ".gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; padding: 10px 0; }"
-                html_code += ".img-box { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }"
-                html_code += ".img-box img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }"
-                html_code += ".img-box:hover img { transform: scale(1.05); }"
-                html_code += ".overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }"
-                html_code += ".img-box:hover .overlay { opacity: 1; }"
-                html_code += ".action-btn { background-color: rgba(255, 255, 255, 0.9); color: #000 !important; padding: 12px 24px; border-radius: 30px; text-decoration: none !important; font-weight: bold; font-size: 15px; transition: background-color 0.2s ease, transform 0.2s ease; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }"
-                html_code += ".action-btn:hover { background-color: #fff; transform: scale(1.05); }"
-                html_code += "</style>"
-                
-                html_code += '<div class="gallery">'
-                for img_url in images_list:
-                    html_code += f'<div class="img-box"><img src="{img_url}" loading="lazy"><div class="overlay"><a href="{img_url}" target="_blank" class="action-btn">👁️ View HD</a></div></div>'
-                html_code += '</div>'
-                
-                st.markdown(html_code, unsafe_allow_html=True)
+                    st.error(f"⚠️ AI Server busy. Try again. (Error {hf_response.status_code})")
             else:
-                st.error("No images found. Please check your API keys or try a different keyword.")
+                st.error("⚠️ Website blocked the image download. Please try a different photo.")
+        except Exception as e:
+            st.error("⚠️ Network connection broke (IncompleteRead). Please try clicking 'Get PNG' again or choose another image.")
+    st.divider()
+
+# ==========================================
+# 🖼️ GALLERY UI (Native Streamlit Columns - Fast & Stable)
+# ==========================================
+if len(st.session_state.images_list) > 0:
+    st.write(f"🎉 Found {len(st.session_state.images_list)} images!")
+    
+    c1, c2, c3 = st.columns(3)
+    
+    for i, img_url in enumerate(st.session_state.images_list):
+        # Distribute images equally in 3 columns
+        col = c1 if i % 3 == 0 else c2 if i % 3 == 1 else c3
+        
+        with col:
+            # Display Image
+            st.image(img_url, use_container_width=True)
+            
+            # Display Buttons Side-by-Side right under the image
+            bc1, bc2 = st.columns(2)
+            with bc1:
+                st.link_button("👁️ View", img_url, use_container_width=True)
+            with bc2:
+                # DIRECT AI BUTTON
+                if st.button("✂️ Get PNG", key=f"ai_btn_{i}", use_container_width=True):
+                    st.session_state.ai_target_url = img_url
+                    st.rerun() # Yeh app ko turant upar AI Studio me bhej dega!
+
+elif query:
+    st.error("No images found. Please check your API keys or try a different keyword.")
